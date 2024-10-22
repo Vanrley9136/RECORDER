@@ -1,0 +1,23 @@
+{
+    "name": "Full HD Screen Recorder",
+    "short_name": "Screen Recorder",
+    "description": "Gravador de Tela Full HD com Player Elegante",
+    "start_url": "/recorder.html",
+    "display": "standalone",
+    "background_color": "#1d1f27",
+    "theme_color": "#ff6f61",
+    "icons": [
+      {
+        "src": "/13159904.png",
+        "sizes": "192x192",
+        "type": "image/png"
+      },
+      {
+        "src": "/13159904.png",
+        "sizes": "512x512",
+        "type": "image/png"
+      }
+    ],
+    "lang": "pt-BR"
+  }
+  
