@@ -1,7 +1,7 @@
 const CACHE_NAME = 'screen-recorder-cache-v1';
 const urlsToCache = [
   '/',
-  '/recorder.html',
+  '/index.html',
   '/manifest.json',
   '/13159904.png',
   '/13159904.png',
