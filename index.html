@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>V-Recorder HD - Gravador de Tela Full HD</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+    <link rel="manifest" href="/manifest.json">
+    <style>
+        @font-face {
+            font-family: 'Enter the Grid';
+            src: url('Enter the Grid.ttf') format('opentype');
+        }
+
+        body {
+            font-family: 'Enter the Grid', sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #1d1f27;
+            color: white;
+            margin: 0;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 900px;
+            width: 100%;
+            padding: 20px;
+            background-color: #2b2f38;
+            border-radius: 15px;
+            box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        h1 {
+            color: #ffffff;
+            font-size: 50px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 14px 28px;
+            margin: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            border-radius: 10px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        button:disabled {
+            background-color: gray;
+            cursor: not-allowed;
+        }
+
+        #preview {
+            display: none;
+            margin-top: 20px;
+            max-width: 100%;
+            max-height: 80vh;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+        }
+
+        #download {
+            display: none;
+            margin-top: 20px;
+            padding: 12px 24px;
+            background-color: #ff6f61;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 14px;
+            color: #aaa;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>V-Recorder HD</h1>
+        <div class="controls">
+            <button id="startRecording" onclick="startRecording()">Iniciar Gravação</button>
+            <button id="stopRecording" onclick="stopRecording()" disabled>Parar Gravação</button>
+        </div>
+        <video id="preview" controls></video>
+        <a id="download" href="#" download>Baixar Vídeo</a>
+    </div>
+
+    <footer>
+        &copy; 2024 Vertex Systems and Software Computing. Todos os direitos reservados.
+    </footer>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/plyr@3.7.8/dist/plyr.css">
+    <script src="https://cdn.jsdelivr.net/npm/plyr@3.7.8/dist/plyr.js"></script>
+    
+    <script>
+        const player = new Plyr('#preview');
+
+        let mediaRecorder;
+        let recordedChunks = [];
+        let preview = document.getElementById('preview');
+        let startBtn = document.getElementById('startRecording');
+        let stopBtn = document.getElementById('stopRecording');
+        let downloadBtn = document.getElementById('download');
+
+        // Função para iniciar a gravação
+        async function startRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getDisplayMedia({
+                    video: {
+                        mediaSource: 'screen',
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 },
+                        frameRate: { ideal: 30 }
+                    },
+                    audio: false
+                });
+
+                preview.style.display = 'none';
+
+                mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+
+                mediaRecorder.ondataavailable = function (e) {
+                    if (e.data.size > 0) {
+                        recordedChunks.push(e.data);
+                    }
+                };
+
+                mediaRecorder.onstop = function () {
+                    const blob = new Blob(recordedChunks, {
+                        type: 'video/webm'
+                    });
+                    const url = URL.createObjectURL(blob);
+
+                    preview.src = url;
+                    preview.style.display = 'block';
+                    player.source = {
+                        type: 'video',
+                        sources: [{
+                            src: url,
+                            type: 'video/webm',
+                        }]
+                    };
+
+                    downloadBtn.style.display = 'inline-block';
+                    downloadBtn.href = url;
+                    const fileName = prompt('Digite o nome do arquivo para download:', 'meu_video_gravado');
+                    downloadBtn.download = fileName ? `${fileName}.webm` : 'meu_video_gravado.webm';
+
+                    recordedChunks = [];
+                };
+
+                mediaRecorder.start();
+
+                // Desativa o botão de início e ativa o de parar
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+                downloadBtn.style.display = 'none';
+            } catch (err) {
+                console.error("Erro ao iniciar gravação da tela:", err);
+            }
+        }
+
+        // Função para parar a gravação
+        function stopRecording() {
+            mediaRecorder.stop();
+            // Para o compartilhamento de tela corretamente ao parar a gravação
+            mediaRecorder.stream.getTracks().forEach(track => track.stop());
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+        }
+    </script>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(function (registration) {
+                        console.log('Service Worker registrado com sucesso:', registration.scope);
+                    }, function (err) {
+                        console.log('Falha ao registrar o Service Worker:', err);
+                    });
+            });
+        }
+    </script>
+
+</body>
+
+</html>
